@@ -181,14 +181,16 @@ class EquProcessor(BaseProcessor):
     mask = (mask >= 128).astype(np.int32)
 
     # zero-out edge
-    mask[0] = 0
-    mask[-1] = 0
-    mask[:, 0] = 0
-    mask[:, -1] = 0
+    # mask[0] = 0
+    # mask[-1] = 0
+    # mask[:, 0] = 0
+    # mask[:, -1] = 0
 
     x, y = np.nonzero(mask)
-    x0, x1 = x.min() - 1, x.max() + 2
-    y0, y1 = y.min() - 1, y.max() + 2
+    # x0, x1 = x.min() - 1, x.max() + 2
+    # y0, y1 = y.min() - 1, y.max() + 2
+    x0, x1 = x.min(), x.max()
+    y0, y1 = y.min(), y.max()
     mask_on_src = (x0 + mask_on_src[0], y0 + mask_on_src[1])
     mask_on_tgt = (x0 + mask_on_tgt[0], y0 + mask_on_tgt[1])
     mask = mask[x0:x1, y0:y1]
@@ -198,15 +200,15 @@ class EquProcessor(BaseProcessor):
     tgt_x, tgt_y = index_x + mask_on_tgt[0], index_y + mask_on_tgt[1]
 
     src_C = src[src_x, src_y].astype(np.float32)
-    src_U = src[src_x - 1, src_y].astype(np.float32)
-    src_D = src[src_x + 1, src_y].astype(np.float32)
-    src_L = src[src_x, src_y - 1].astype(np.float32)
-    src_R = src[src_x, src_y + 1].astype(np.float32)
+    src_U = src[np.clip(src_x - 1, a_min=0, a_max=src.shape[0]-1), src_y].astype(np.float32)
+    src_D = src[np.clip(src_x + 1, a_min=0, a_max=src.shape[0]-1), src_y].astype(np.float32)
+    src_L = src[src_x, np.clip(src_y - 1, a_min=0, a_max=src.shape[1]-1)].astype(np.float32)
+    src_R = src[src_x, np.clip(src_y + 1, a_min=0, a_max=src.shape[1]-1)].astype(np.float32)
     tgt_C = tgt[tgt_x, tgt_y].astype(np.float32)
-    tgt_U = tgt[tgt_x - 1, tgt_y].astype(np.float32)
-    tgt_D = tgt[tgt_x + 1, tgt_y].astype(np.float32)
-    tgt_L = tgt[tgt_x, tgt_y - 1].astype(np.float32)
-    tgt_R = tgt[tgt_x, tgt_y + 1].astype(np.float32)
+    tgt_U = tgt[np.clip(tgt_x - 1, a_min=0, a_max=tgt.shape[0]-1), tgt_y].astype(np.float32)
+    tgt_D = tgt[np.clip(tgt_x + 1, a_min=0, a_max=tgt.shape[0]-1), tgt_y].astype(np.float32)
+    tgt_L = tgt[tgt_x, np.clip(tgt_y - 1, a_min=0, a_max=tgt.shape[1]-1)].astype(np.float32)
+    tgt_R = tgt[tgt_x, np.clip(tgt_y + 1, a_min=0, a_max=tgt.shape[1]-1)].astype(np.float32)
 
     grad = self.mixgrad(src_C - src_L, tgt_C - tgt_L) \
       + self.mixgrad(src_C - src_R, tgt_C - tgt_R) \
@@ -219,19 +221,19 @@ class EquProcessor(BaseProcessor):
 
     X[1:] = tgt[index_x + mask_on_tgt[0], index_y + mask_on_tgt[1]]
     # four-way
-    A[1:, 0] = ids[index_x - 1, index_y]
-    A[1:, 1] = ids[index_x + 1, index_y]
-    A[1:, 2] = ids[index_x, index_y - 1]
-    A[1:, 3] = ids[index_x, index_y + 1]
+    A[1:, 0] = ids[np.clip(index_x - 1, a_min=0, a_max=x1-x0-1), index_y]
+    A[1:, 1] = ids[np.clip(index_x + 1, a_min=0, a_max=x1-x0-1), index_y]
+    A[1:, 2] = ids[index_x, np.clip(index_y - 1, a_min=0, a_max=y1-y0-1)]
+    A[1:, 3] = ids[index_x, np.clip(index_y + 1, a_min=0, a_max=y1-y0-1)]
     B[1:] = grad
-    m = (mask[index_x - 1, index_y] == 0).astype(float).reshape(-1, 1)
-    B[1:] += m * tgt[index_x + mask_on_tgt[0] - 1, index_y + mask_on_tgt[1]]
-    m = (mask[index_x, index_y - 1] == 0).astype(float).reshape(-1, 1)
-    B[1:] += m * tgt[index_x + mask_on_tgt[0], index_y + mask_on_tgt[1] - 1]
-    m = (mask[index_x, index_y + 1] == 0).astype(float).reshape(-1, 1)
-    B[1:] += m * tgt[index_x + mask_on_tgt[0], index_y + mask_on_tgt[1] + 1]
-    m = (mask[index_x + 1, index_y] == 0).astype(float).reshape(-1, 1)
-    B[1:] += m * tgt[index_x + mask_on_tgt[0] + 1, index_y + mask_on_tgt[1]]
+    m = (mask[np.clip(index_x - 1, a_min=0, a_max=x1-x0-1), index_y] == 0).astype(float).reshape(-1, 1)
+    B[1:] += m * tgt[np.clip(index_x - 1, a_min=0, a_max=x1-x0-1) + mask_on_tgt[0], index_y + mask_on_tgt[1]]
+    m = (mask[index_x, np.clip(index_y - 1, a_min=0, a_max=y1-y0-1)] == 0).astype(float).reshape(-1, 1)
+    B[1:] += m * tgt[index_x + mask_on_tgt[0], np.clip(index_y - 1, a_min=0, a_max=y1-y0-1) + mask_on_tgt[1]]
+    m = (mask[index_x, np.clip(index_y + 1, a_min=0, a_max=y1-y0-1)] == 0).astype(float).reshape(-1, 1)
+    B[1:] += m * tgt[index_x + mask_on_tgt[0], np.clip(index_y + 1, a_min=0, a_max=y1-y0-1) + mask_on_tgt[1]]
+    m = (mask[np.clip(index_x + 1, a_min=0, a_max=x1-x0-1), index_y] == 0).astype(float).reshape(-1, 1)
+    B[1:] += m * tgt[np.clip(index_x + 1, a_min=0, a_max=x1-x0-1) + mask_on_tgt[0], index_y + mask_on_tgt[1]]
 
     self.tgt = tgt.copy()
     self.tgt_index = (index_x + mask_on_tgt[0], index_y + mask_on_tgt[1])
