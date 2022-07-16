@@ -13,7 +13,7 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/pybind11)
     PROJECT_NAME
     pybind11
     GIT_URL
-    https://github.com/pybind/pybind11.git
+    git@github.com:pybind/pybind11.git
     GIT_BRANCH
     stable # To use stable version
     # GIT_TAG ${PYBIND11_VERSION}

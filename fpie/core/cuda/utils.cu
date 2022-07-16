@@ -3,6 +3,7 @@
 #include "utils.h"
 
 void print_cuda_info() {
+#if 0
   int deviceCount = 0;
   cudaError_t err = cudaGetDeviceCount(&deviceCount);
 
@@ -19,4 +20,5 @@ void print_cuda_info() {
     printf("   CUDA Cap:   %d.%d\n", deviceProps.major, deviceProps.minor);
   }
   printf("---------------------------------------------------------\n");
+#endif
 }

@@ -1,3 +1,17 @@
+## write a simple python API for it
+``` bash
+# download
+git clone git@github.com:Karbo123/Fast-Poisson-Image-Editing.git --depth=1
+# install
+cd Fast-Poisson-Image-Editing && pip install .
+# to test
+cd .. && python -m fpie.main ./Fast-Poisson-Image-Editing
+```
+
+an example can be found at: `fpie/main.py`
+
+---
+
 # Poisson Image Editing - A Parallel Implementation
 
 [![PyPI](https://img.shields.io/pypi/v/fpie)](https://pypi.org/project/fpie/)
